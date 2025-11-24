@@ -1,0 +1,48 @@
+import unittest
+from unittest.mock import patch
+from file_manager import FileSystemManager
+
+class TestFileSystemManager(unittest.TestCase):
+    def setUp(self):
+        self.manager = FileSystemManager('/path/to/your/folder')
+
+    @patch('shutil.copy')
+    def test_copy_file(self, mock_copy):
+        self.manager.copy_file('/path/to/source/file', '/path/to/destination/file')
+        mock_copy.assert_called_once_with('/path/to/source/file', '/path/to/destination/file')
+
+    @patch('os.remove')
+    def test_delete_file(self, mock_remove):
+        self.manager.delete_file('/path/to/file/to/delete')
+        mock_remove.assert_called_once_with('/path/to/file/to/delete')
+
+    @patch('os.walk')
+    def test_count_files_in_folder(self, mock_walk):
+        mock_walk.return_value = [
+            ('/path/to/your/folder', ['dir1', 'dir2'], ['file1', 'file2']),
+            ('/path/to/your/folder/dir1', [], ['file3', 'file4']),
+            ('/path/to/your/folder/dir2', [], ['file5'])
+        ]
+        count = self.manager.count_files_in_folder()
+        self.assertEqual(count, 5)
+
+    @patch('os.walk')
+    def test_search_files_by_filter(self, mock_walk):
+        mock_walk.return_value = [
+            ('/path/to/your/folder', ['dir1', 'dir2'], ['file1', 'file2']),
+            ('/path/to/your/folder/dir1', [], ['file3', 'file4']),
+            ('/path/to/your/folder/dir2', [], ['file5'])
+        ]
+        found_files = self.manager.search_files_by_filter('file')
+        expected_files = [
+            '/path/to/your/folder/file1',
+            '/path/to/your/folder/file2',
+            '/path/to/your/folder/dir1/file3',
+            '/path/to/your/folder/dir1/file4',
+            '/path/to/your/folder/dir2/file5'
+        ]
+        self.assertEqual(found_files, expected_files)
+
+if __name__ == '__main__':
+
+    unittest.main()
